@@ -402,6 +402,7 @@ set(common_SRCS
 	mapsector.cpp
 	metadata.cpp
 	modchannels.cpp
+        mumble_link.cpp
 	nameidmapping.cpp
 	nodedef.cpp
 	nodemetadata.cpp

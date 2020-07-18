@@ -50,6 +50,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "gui/profilergraph.h"
 #include "mapblock.h"
 #include "minimap.h"
+#include "mumble_link.h"
 #include "nodedef.h"         // Needed for determining pointing to nodes
 #include "nodemetadata.h"
 #include "particles.h"
@@ -842,6 +843,8 @@ private:
 	bool sound_is_dummy = false;
 	SoundMaker *soundmaker = nullptr;
 
+    MumbleLink *mumble_link = nullptr;
+
 	ChatBackend *chat_backend = nullptr;
 
 	EventManager *eventmgr = nullptr;
@@ -1242,6 +1245,7 @@ bool Game::initSound()
 		sound = createOpenALSoundManager(g_sound_manager_singleton.get(), &soundfetcher);
 		if (!sound)
 			infostream << "Failed to initialize OpenAL audio" << std::endl;
+        mumble_link = new MumbleLink();
 	} else
 		infostream << "Sound disabled." << std::endl;
 #endif
@@ -2958,11 +2962,16 @@ void Game::updateSound(f32 dtime)
 {
 	// Update sound listener
 	v3s16 camera_offset = camera->getOffset();
-	sound->updateListener(camera->getCameraNode()->getPosition() + intToFloat(camera_offset, BS),
+    v3f pos = camera->getCameraNode()->getPosition() + intToFloat(camera_offset, BS);
+    v3f at = camera->getDirection();
+    v3f up = camera->getCameraNode()->getUpVector();
+    sound->updateListener(pos,
 			      v3f(0, 0, 0), // velocity
-			      camera->getDirection(),
-			      camera->getCameraNode()->getUpVector());
-
+                  at,
+                  up);
+    mumble_link->updateMumble(pos.X, pos.Y, pos.Z,
+                              at.X,  at.Y,  at.Z,
+                              up.X,  up.Y,  up.Z);
 	bool mute_sound = g_settings->getBool("mute_sound");
 	if (mute_sound) {
 		sound->setListenerGain(0.0f);
